@@ -7,18 +7,25 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.media.AudioManager;
+import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.ResultReceiver;
+import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -26,21 +33,27 @@ import android.widget.Toast;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class SongFragment extends Fragment {
 
-    private Button mBtnPlay, mBtnForward, mBtnPrevious, mBtnRewind, mBtnNext;
+    private Button mBtnPlay, mBtnForward, mBtnPrevious, mBtnRewind, mBtnNext, mBtnVolumeUp, mBtnVolumeDown;
     //private MediaPlayer mediaPlayer;
-    private SeekBar mSeekBar;
+    private SeekBar mSeekBarVolume = null;
     private TextView mStartTime, mEndTime, mSongName;
+    private ImageView mSongImage;
     private Thread thread;
     private String songName;
     private String songPath;
     private String position;
     private List<SongList> songLists;
+    private AudioManager mAudioManager = null;
+    private int volumeMax, currentVolume;
+    private String musicIsPlaying;
 
     @Nullable
     @Override
@@ -62,22 +75,71 @@ public class SongFragment extends Fragment {
             songName = songLists.get(Integer.valueOf(position)).getTitle();
             songPath = songLists.get(Integer.valueOf(position)).getPath();
             mSongName.setText(songName);
+            //mSongImage.set
             Log.i("ccccccc", songName);
 
             getActivity().stopService(new Intent(getActivity(), SongService.class));
             getActivity().startService(new Intent(getActivity(), SongService.class)
                     .putExtra("sonUri", songPath));
-            mBtnPlay.setText(R.string.pause);
+
+            //Volume
+            getActivity().setVolumeControlStream(AudioManager.STREAM_MUSIC);
+            mAudioManager = (AudioManager) getActivity().getSystemService(Context.AUDIO_SERVICE);
+            volumeMax = mAudioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+            currentVolume = mAudioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
+            mSeekBarVolume.setMax(volumeMax);
+            mSeekBarVolume.setProgress(currentVolume);
+
+            mSeekBarVolume.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+                @Override
+                public void onStopTrackingTouch(SeekBar arg0) {
+                }
+
+                @Override
+                public void onStartTrackingTouch(SeekBar arg0) {
+                }
+
+                @Override
+                public void onProgressChanged(SeekBar arg0, int progress, boolean arg2) {
+                    mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, progress, 0);
+                }
+            });
+
+            mBtnVolumeUp.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    mAudioManager.adjustVolume(AudioManager.ADJUST_RAISE, AudioManager.FLAG_PLAY_SOUND);
+                    currentVolume = currentVolume + 1;
+                    mSeekBarVolume.setProgress(currentVolume);
+                }
+            });
+
+            mBtnVolumeDown.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    mAudioManager.adjustVolume(AudioManager.ADJUST_LOWER, AudioManager.FLAG_PLAY_SOUND);
+                    currentVolume = currentVolume - 1;
+                    mSeekBarVolume.setProgress(currentVolume);
+                }
+            });
+
+
+            //mBtnPlay.setText(R.string.pause);
+            musicIsPlaying = "Pause";
 
             mBtnPlay.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    if (mBtnPlay.getText().equals("Pause")) {
-                        mBtnPlay.setText(R.string.play);
+                    if (musicIsPlaying.equals("Pause")) {
+                        //mBtnPlay.setText(R.string.play);
+                        musicIsPlaying = "Play";
+                        mBtnPlay.setBackgroundResource(R.drawable.play);
                         getActivity().startService(new Intent(getActivity(), SongService.class)
                                 .putExtra("pauseSong", "pauseSong"));
                     } else {
-                        mBtnPlay.setText(R.string.pause);
+                        //mBtnPlay.setText(R.string.pause);
+                        musicIsPlaying = "Pause";
+                        mBtnPlay.setBackgroundResource(R.drawable.pause);
                         getActivity().startService(new Intent(getActivity(), SongService.class)
                                 .putExtra("playSong", "playSong"));
                     }
@@ -146,8 +208,10 @@ public class SongFragment extends Fragment {
 
         }
 
+
         return view;
     }
+
 
     public void uiUpdate(View view) {
         mBtnPlay = view.findViewById(R.id.btn_play);
@@ -155,10 +219,14 @@ public class SongFragment extends Fragment {
         mBtnNext = view.findViewById(R.id.btn_next);
         mBtnPrevious = view.findViewById(R.id.btn_previous);
         mBtnRewind = view.findViewById(R.id.btn_rewind);
-        mSeekBar = view.findViewById(R.id.seekBar);
-        mStartTime = view.findViewById(R.id.tv_start_time);
-        mEndTime = view.findViewById(R.id.tv_end_time);
+        mSeekBarVolume = view.findViewById(R.id.sb_volume);
+        mStartTime = view.findViewById(R.id.tv_songDuration);
         mSongName = view.findViewById(R.id.tv_song_name);
+        mBtnVolumeUp = view.findViewById(R.id.btn_volumeUp);
+        mBtnVolumeDown = view.findViewById(R.id.btn_volumeDown);
+        mSongImage = view.findViewById(R.id.imageView);
+
+
     }
 
     @Override
@@ -175,14 +243,10 @@ public class SongFragment extends Fragment {
         @Override
         public void onReceive(Context context, Intent intent) {
             String startTimeInSec = intent.getStringExtra("startTimeInSec");
-            String endTimeInSec = intent.getStringExtra("endTimeInSec");
-            int position = intent.getIntExtra("position", 0);
+            //String endTimeInSec = intent.getStringExtra("endTimeInSec");
+            //int position = intent.getIntExtra("position", 0);
             int songDuration = intent.getIntExtra("songDuration", 0);
             mStartTime.setText(startTimeInSec);
-            mEndTime.setText(endTimeInSec);
-            mSeekBar.setProgress(position);
-            mSeekBar.setMax(songDuration);
-            //seekBarThread(position, songDuration);
         }
     };
 

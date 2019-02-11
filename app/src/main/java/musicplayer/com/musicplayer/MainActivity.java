@@ -172,14 +172,14 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void uiUpdate() {
-        mBtnPlay = (Button) findViewById(R.id.btn_play);
+        //mBtnPlay = (Button) findViewById(R.id.btn_play);
         mBtnForward = (Button) findViewById(R.id.btn_forward);
         mBtnNext = (Button) findViewById(R.id.btn_next);
         mBtnPrevious = (Button) findViewById(R.id.btn_previous);
-        mBtnRewind = (Button) findViewById(R.id.btn_rewind);
-        seekBar = (SeekBar) findViewById(R.id.seekBar);
-        startTime = (TextView) findViewById(R.id.tv_start_time);
-        endTime = (TextView) findViewById(R.id.tv_end_time);
+//        mBtnRewind = (Button) findViewById(R.id.btn_rewind);
+//        seekBar = (SeekBar) findViewById(R.id.seekBar);
+//        startTime = (TextView) findViewById(R.id.tv_start_time);
+//        endTime = (TextView) findViewById(R.id.tv_end_time);
         mSongName = (TextView) findViewById(R.id.tv_song_name);
     }
 
@@ -195,7 +195,7 @@ public class MainActivity extends AppCompatActivity {
             startService(new Intent(this, SongService.class)
                     .putExtra("sonUri", songPath));
             mediaPlayer.start();
-            seekBarThread();
+            //seekBarThread();
             mBtnPlay.setText(R.string.pause);
         }
     }
@@ -212,45 +212,45 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
     }
 
-    @SuppressLint("DefaultLocale")
-    public void seekBarThread() {
-        thread = new Thread() {
-
-            @Override
-            public void run() {
-
-                try {
-                    while (mediaPlayer != null && mediaPlayer.isPlaying()) {
-                        Thread.sleep(500);
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                if (mediaPlayer != null) {
-                                    int position = mediaPlayer.getCurrentPosition();
-                                    int songDuration = mediaPlayer.getDuration();
-                                    seekBar.setMax(songDuration);
-                                    seekBar.setProgress(position);
-                                    String startTimeInSec = String.format("%02d:%02d",
-                                            TimeUnit.MILLISECONDS.toMinutes(position),
-                                            TimeUnit.MILLISECONDS.toSeconds(position) -
-                                                    TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(position)));
-                                    String endTimeInSec = String.format("%02d:%02d",
-                                            TimeUnit.MILLISECONDS.toMinutes(songDuration - position),
-                                            TimeUnit.MILLISECONDS.toSeconds(songDuration - position) -
-                                                    TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(songDuration - position)));
-                                    Log.i("startTime->", startTimeInSec);
-                                    startTime.setText(startTimeInSec);
-                                    endTime.setText(endTimeInSec);
-                                }
-                            }
-                        });
-                    }
-
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-        };
-        thread.start();
-    }
+//    @SuppressLint("DefaultLocale")
+//    public void seekBarThread() {
+//        thread = new Thread() {
+//
+//            @Override
+//            public void run() {
+//
+//                try {
+//                    while (mediaPlayer != null && mediaPlayer.isPlaying()) {
+//                        Thread.sleep(500);
+//                        runOnUiThread(new Runnable() {
+//                            @Override
+//                            public void run() {
+//                                if (mediaPlayer != null) {
+//                                    int position = mediaPlayer.getCurrentPosition();
+//                                    int songDuration = mediaPlayer.getDuration();
+//                                    seekBar.setMax(songDuration);
+//                                    seekBar.setProgress(position);
+//                                    String startTimeInSec = String.format("%02d:%02d",
+//                                            TimeUnit.MILLISECONDS.toMinutes(position),
+//                                            TimeUnit.MILLISECONDS.toSeconds(position) -
+//                                                    TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(position)));
+//                                    String endTimeInSec = String.format("%02d:%02d",
+//                                            TimeUnit.MILLISECONDS.toMinutes(songDuration - position),
+//                                            TimeUnit.MILLISECONDS.toSeconds(songDuration - position) -
+//                                                    TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(songDuration - position)));
+//                                    Log.i("startTime->", startTimeInSec);
+//                                    startTime.setText(startTimeInSec);
+//                                    endTime.setText(endTimeInSec);
+//                                }
+//                            }
+//                        });
+//                    }
+//
+//                } catch (InterruptedException e) {
+//                    e.printStackTrace();
+//                }
+//            }
+//        };
+//        thread.start();
+//    }
 }

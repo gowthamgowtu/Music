@@ -3,6 +3,7 @@ package musicplayer.com.musicplayer;
 import android.Manifest;
 import android.app.FragmentManager;
 import android.content.ContentResolver;
+import android.content.ContentUris;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
@@ -83,13 +84,22 @@ public class SongListActivity extends AppCompatActivity {
             int songTitle = songCursor.getColumnIndex(MediaStore.Audio.Media.TITLE);
             int songArtist = songCursor.getColumnIndex(MediaStore.Audio.Media.ARTIST);
             int path = songCursor.getColumnIndex(MediaStore.Audio.Media.DATA);
+            int image = songCursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID);
+
+            Uri sArtworkUri = Uri
+                    .parse("content://media/external/audio/albumart");
+            Uri albumArtUri = ContentUris.withAppendedId(sArtworkUri,
+                    image);
+
+            Log.i("image",MediaStore.Audio.Media.ALBUM_ID);
 
             do {
                 SongList songList = new SongList();
                 songList.setTitle(songCursor.getString(songTitle));
                 songList.setArtist(songCursor.getString(songArtist));
                 songList.setPath(songCursor.getString(path));
-                //Log.i("currentTitle", songCursor.getString(songTitle));
+                //songList.setAlbum(songCursor.getString(image));
+                songList.setAlbum(String.valueOf(albumArtUri));
                 songLists.add(songList);
             } while (songCursor.moveToNext());
         }

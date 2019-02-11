@@ -29,7 +29,6 @@ public class SongService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
-
         songPath = intent.getStringExtra("sonUri");
         if (intent.getStringExtra("pauseSong") != null && intent.getStringExtra("pauseSong").equals("pauseSong")) {
             mediaPlayer.pause();
